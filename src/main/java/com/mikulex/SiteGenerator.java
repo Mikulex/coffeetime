@@ -1,9 +1,7 @@
 package com.mikulex;
 
 import java.io.FileNotFoundException;
-import java.io.FilenameFilter;
 import java.nio.file.Files;
-import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -60,35 +58,35 @@ public class SiteGenerator {
     }
 
     private void generatePosts() {
-        List<Path> posts = collectPosts();
+        List<Post> posts = collectPosts();
         System.out.println("Converting posts");
-        for (Path post : posts) {
+        for (Post post : posts) {
             createFile(post, postsFolder);
         }
 
     }
 
     private void generatePages() {
-        List<Path> pages = collectPages();
+        List<Post> pages = collectPages();
         System.out.println("Converting pages");
-        for (Path page : pages) {
+        for (Post page : pages) {
             createFile(page, pagesFolder);
         }
     }
 
-    private void createFile(Path file, Path target) {
-        System.out.println("Creating post for " + file);
+    private void createFile(Post post, Path target) {
         try {
-            Node document = mdParser.parse(Files.readString(file));
+            Node document = mdParser.parse(post.getMarkdownRawContent());
             String html = renderer.render(document);
 
-            Path relativeFile = target.toAbsolutePath().relativize(file);
+            Path relativeFile = target.toAbsolutePath().relativize(post.getFile());
 
             String[] fileNameSplit = relativeFile.toString().split("\\.");
             fileNameSplit[fileNameSplit.length - 1] = ".html";
             String fileName = "";
             for (String part : fileNameSplit) {
                 fileName = fileName.concat(part);
+
             }
             Path newFile = siteFolder.resolve(fileName);
 
@@ -96,13 +94,14 @@ public class SiteGenerator {
             Files.createFile(newFile);
             Files.writeString(newFile, html, StandardOpenOption.WRITE);
         } catch (Exception e) {
-            System.err.println("Failed while creating post for " + file.toAbsolutePath());
+            System.err.println("Failed while creating post for " + post.getFile().getFileName().toAbsolutePath());
             System.err.println(e);
         }
     }
 
-    private List<Path> collectPosts() {
-        List<Path> posts = new ArrayList<>();
+    private List<Post> collectPosts() {
+        List<Path> postFiles = new ArrayList<>();
+        List<Post> posts = new ArrayList<>();
 
         System.out.println("Collecting posts in " + postsFolder.getFileName());
         try {
@@ -110,7 +109,7 @@ public class SiteGenerator {
                 throw new FileNotFoundException("Missing directory: " + postsFolder.toAbsolutePath());
             }
 
-            posts = Files.walk(postsFolder).filter(Files::isRegularFile)
+            postFiles = Files.walk(postsFolder).filter(Files::isRegularFile)
                     .filter(file -> file.toString().toLowerCase().endsWith(".md"))
                     .collect(Collectors.toCollection(ArrayList::new));
 
@@ -120,19 +119,42 @@ public class SiteGenerator {
             System.err.println("Aborting");
             System.exit(1);
         }
+
+        for (Path p : postFiles) {
+            try {
+                posts.add(new Post(p));
+            } catch (Exception e) {
+                System.err.println("Failed to create post for " + p.toAbsolutePath());
+                System.err.println("Skipping file");
+                System.err.println(e);
+            }
+
+        }
         System.out.println("Post count: " + posts.size());
+
         return posts;
 
     }
 
-    private List<Path> collectPages() {
-        List<Path> pages = new ArrayList<>();
+    private List<Post> collectPages() {
+        List<Path> pageFiles = new ArrayList<>();
+        List<Post> pages = new ArrayList<>();
         try {
-            pages = Files.list(siteFolder).filter(Files::isRegularFile)
+            pageFiles = Files.list(siteFolder).filter(Files::isRegularFile)
                     .filter(file -> file.toString().toLowerCase().endsWith(".md"))
                     .collect(Collectors.toCollection(ArrayList::new));
         } catch (Exception e) {
             System.err.println(e);
+        }
+
+        for (Path p : pageFiles) {
+            try {
+                pages.add(new Post(p));
+
+            } catch (Exception e) {
+                System.err.println("Failed create page for " + p.toAbsolutePath());
+                System.err.println(e);
+            }
         }
         return pages;
 
