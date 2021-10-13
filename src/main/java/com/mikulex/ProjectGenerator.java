@@ -25,6 +25,7 @@ public class ProjectGenerator {
             Files.createDirectory(projectPath.resolve("_posts"));
             Files.createDirectory(projectPath.resolve("_pages"));
             Files.createDirectory(projectPath.resolve("_site"));
+            Files.createDirectory(projectPath.resolve("_layouts"));
 
             // Create Files
             Files.createFile(projectPath.resolve("config.yaml"));
