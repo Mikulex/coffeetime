@@ -128,8 +128,9 @@ public class SiteGenerator {
     private List<Path> collectPages() {
         List<Path> pages = new ArrayList<>();
         try {
-            pages = Files.list(Paths.get(System.getProperty("user.dir"))).filter(Files::isRegularFile)
-                    .filter(file -> file.endsWith(".md")).collect(Collectors.toCollection(ArrayList::new));
+            pages = Files.list(siteFolder).filter(Files::isRegularFile)
+                    .filter(file -> file.toString().toLowerCase().endsWith(".md"))
+                    .collect(Collectors.toCollection(ArrayList::new));
         } catch (Exception e) {
             System.err.println(e);
         }
@@ -140,5 +141,6 @@ public class SiteGenerator {
     public void build() {
         cleanSiteFolder();
         generatePosts();
+        generatePages();
     }
 }
