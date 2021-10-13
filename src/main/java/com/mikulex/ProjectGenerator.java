@@ -23,7 +23,6 @@ public class ProjectGenerator {
 
             // Create underlying directories
             Files.createDirectory(projectPath.resolve("_posts"));
-            Files.createDirectory(projectPath.resolve("_pages"));
             Files.createDirectory(projectPath.resolve("_site"));
             Files.createDirectory(projectPath.resolve("_layouts"));
 
