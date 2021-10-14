@@ -1,6 +1,7 @@
 package com.mikulex;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -23,7 +24,7 @@ public class SiteGenerator {
     private Path pagesFolder;
     private Path siteFolder;
 
-    public SiteGenerator() {
+    public SiteGenerator() throws IOException {
         config = new SiteConfig();
         root = Paths.get(System.getProperty("user.dir"));
         postsFolder = root.resolve("_posts");
