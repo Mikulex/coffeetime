@@ -6,19 +6,20 @@ package com.mikulex;
  */
 public class App {
     public static void main(String[] args) {
-        switch (args[0]) {
-            case "generate":
-                App.generate(args);
-                break;
-            case "build":
-                SiteGenerator generator = new SiteGenerator();
-                generator.build();
-                System.out.println("finished");
-                break;
-            default:
-                System.err.println("Command not recognized");
+        if (args.length == 0) {
+            System.err.println("Arguments expected");
+        } else {
+            switch (args[0]) {
+                case "generate":
+                    App.generate(args);
+                    break;
+                case "build":
+                    App.build();
+                    break;
+                default:
+                    System.err.println("Command not recognized");
+            }
         }
-
     }
 
     public static void generate(String[] args) {
@@ -37,6 +38,18 @@ public class App {
                     System.err.println("Command not recognized");
                     break;
             }
+        }
+    }
+
+    public static void build() {
+        try {
+            SiteGenerator generator = new SiteGenerator();
+            generator.build();
+            System.out.println("Finished building site");
+
+        } catch (Exception e) {
+            System.err.println("Failed while building site");
+            System.err.println(e);
         }
     }
 }
