@@ -1,27 +1,30 @@
 package com.mikulex;
 
 import java.nio.file.Paths;
+import java.util.Map;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
-import com.amihaiemil.eoyaml.Yaml;
-import com.amihaiemil.eoyaml.YamlMapping;
+import org.snakeyaml.engine.v2.api.Load;
+import org.snakeyaml.engine.v2.api.LoadSettings;
 
 public class SiteConfig {
     private String baseUrl;
     private String title;
-    private YamlMapping config;
+    private Map<String, Object> config;
 
     public SiteConfig() throws IOException {
         Path dir = Paths.get(System.getProperty("user.dir"));
         Path file = Paths.get(dir.toString(), "config.yml");
+        InputStream stream = Files.newInputStream(file);
 
-        YamlMapping config = Yaml.createYamlInput(new File(file.toString())).readYamlMapping();
-        this.config = config;
-        this.baseUrl = config.string("baseUrl");
-        this.title = config.string("title");
-
+        Load load = new Load(LoadSettings.builder().build());
+        this.config = (Map<String, Object>) load.loadFromInputStream(stream);
+        this.baseUrl = (String) config.get("baseUrl");
+        this.title = (String) config.get("title");
+        stream.close();
     }
 
     public String getBaseUrl() {
@@ -32,7 +35,7 @@ public class SiteConfig {
         return title;
     }
 
-    public YamlMapping getConfig() {
+    public Map<String, Object> getConfig() {
         return config;
     }
 }
