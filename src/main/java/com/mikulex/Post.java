@@ -115,14 +115,18 @@ public class Post {
         if (Objects.isNull(mapping) || Objects.isNull(mapping.get("title"))) {
             String[] fileNameParts = this.file.getFileName().toString().split("\\.");
             String fileName = "";
+
+            // cut off file extension
             for (int i = 0; i < fileNameParts.length - 1; i++)
                 fileName = fileName.concat(fileNameParts[i]);
 
             String[] titleParts = fileName.split("-");
 
+            // capitalize first letters
             for (String part : titleParts) {
-                title = title.concat(part.toUpperCase(Locale.ROOT) + " ");
+                part = part.substring(0, 1).toUpperCase() + part.substring(1);
             }
+            title = String.join(" ", titleParts);
         } else {
             title = (String) mapping.get("title");
         }
