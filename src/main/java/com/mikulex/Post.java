@@ -6,17 +6,19 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 
-import com.amihaiemil.eoyaml.Yaml;
-import com.amihaiemil.eoyaml.YamlMapping;
+import org.snakeyaml.engine.v2.api.Load;
+import org.snakeyaml.engine.v2.api.LoadSettings;
 
 public class Post {
     private String title;
     private String markdownRawContent;
     private Path file;
     private Path layout;
-    YamlMapping mapping;
+    private String content;
+    private Map<String, Object> mapping;
 
     /**
      * Generate a new Post based on a markdown file. Title will be generated based
@@ -49,7 +51,8 @@ public class Post {
         line = reader.readLine();
 
         // parse frontmatter
-        mapping = Yaml.createYamlInput(frontMatter).readYamlMapping();
+        Load load = new Load(LoadSettings.builder().build());
+        mapping = (Map<String, Object>) load.loadFromString(frontMatter);
 
         // read rest of the file
         while (!Objects.isNull(line)) {
@@ -63,11 +66,24 @@ public class Post {
         // get layout based on frontmatter
         layout = Paths.get(System.getProperty("user.dir"), "_layouts");
 
-        if (!Objects.isNull(mapping.string("layout"))) {
-            layout.resolve(mapping.string("layout") + ".html");
+        if (!Objects.isNull(mapping) && !Objects.isNull(mapping.get("layout"))) {
+            layout = layout.resolve((String) mapping.get("layout") + ".html");
         } else {
-            layout.resolve("post.html");
+            layout = layout.resolve("post.html");
         }
+
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public Path getLayout() {
+        return layout;
     }
 
     public String getTitle() {
@@ -78,7 +94,7 @@ public class Post {
         return markdownRawContent;
     }
 
-    public YamlMapping getMapping() {
+    public Map<String, Object> getMapping() {
         return mapping;
     }
 
@@ -96,7 +112,7 @@ public class Post {
      */
     private String generateTitle() {
         String title = "";
-        if (Objects.isNull(mapping.string("title"))) {
+        if (Objects.isNull(mapping) || Objects.isNull(mapping.get("title"))) {
             String[] fileNameParts = this.file.getFileName().toString().split("\\.");
             String fileName = "";
             for (int i = 0; i < fileNameParts.length - 1; i++)
@@ -108,7 +124,7 @@ public class Post {
                 title = title.concat(part.toUpperCase(Locale.ROOT) + " ");
             }
         } else {
-            title = mapping.string("title");
+            title = (String) mapping.get("title");
         }
         return title;
     }
