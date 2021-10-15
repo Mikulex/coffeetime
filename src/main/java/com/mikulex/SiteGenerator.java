@@ -1,19 +1,26 @@
 package com.mikulex;
 
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.parser.Parser;
 import com.vladsch.flexmark.util.ast.Node;
+
+import freemarker.template.Configuration;
+import freemarker.template.Template;
 
 public class SiteGenerator {
     private SiteConfig config;
@@ -23,6 +30,7 @@ public class SiteGenerator {
     private Path postsFolder;
     private Path pagesFolder;
     private Path siteFolder;
+    private Configuration templateConfig;
 
     public SiteGenerator() throws IOException {
         config = new SiteConfig();
@@ -32,6 +40,8 @@ public class SiteGenerator {
         siteFolder = root.resolve("_site");
         mdParser = Parser.builder().build();
         renderer = HtmlRenderer.builder().build();
+        templateConfig = new Configuration(Configuration.VERSION_2_3_29);
+        templateConfig.setDirectoryForTemplateLoading(root.resolve("_layouts").toFile());
     }
 
     private void cleanSiteFolder() {
@@ -79,9 +89,16 @@ public class SiteGenerator {
         try {
             Node document = mdParser.parse(post.getMarkdownRawContent());
             String html = renderer.render(document);
+            Map root = new HashMap<>();
+            post.setContent(html);
+            root.put("post", post);
+
+            // TODO: templating of html files
+            // TODO: put post input into layout
 
             Path relativeFile = target.toAbsolutePath().relativize(post.getFile());
 
+            // Swap .md for .html
             String[] fileNameSplit = relativeFile.toString().split("\\.");
             fileNameSplit[fileNameSplit.length - 1] = ".html";
             String fileName = "";
@@ -92,8 +109,16 @@ public class SiteGenerator {
             Path newFile = siteFolder.resolve(fileName);
 
             Files.createDirectories(newFile.getParent());
-            Files.createFile(newFile);
-            Files.writeString(newFile, html, StandardOpenOption.WRITE);
+
+            /* Get the template (uses cache internally) */
+            Template template = templateConfig.getTemplate(post.getLayout().getFileName().toString());
+
+            /* Merge data-model with template */
+            Writer out = new FileWriter(newFile.toFile());
+            template.process(root, out);
+            // Files.createFile(newFile);
+            // Files.writeString(newFile, html, StandardOpenOption.WRITE);
+            out.close();
         } catch (Exception e) {
             System.err.println("Failed while creating post for " + post.getFile().getFileName().toAbsolutePath());
             System.err.println(e);
@@ -115,9 +140,8 @@ public class SiteGenerator {
                     .collect(Collectors.toCollection(ArrayList::new));
 
         } catch (Exception e) {
-            System.err.println("Failed to collect posts!");
+            System.err.println("Failed to collect posts! Aborting");
             System.err.println(e);
-            System.err.println("Aborting");
             System.exit(1);
         }
 
@@ -125,16 +149,13 @@ public class SiteGenerator {
             try {
                 posts.add(new Post(p));
             } catch (Exception e) {
-                System.err.println("Failed to create post for " + p.toAbsolutePath());
-                System.err.println("Skipping file");
+                System.err.println("Failed to create post for " + p.toAbsolutePath() + " ! Skipping file");
                 System.err.println(e);
             }
-
         }
         System.out.println("Post count: " + posts.size());
 
         return posts;
-
     }
 
     private List<Post> collectPages() {
