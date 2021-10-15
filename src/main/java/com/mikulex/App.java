@@ -1,9 +1,5 @@
 package com.mikulex;
 
-/**
- * Hello world!
- *
- */
 public class App {
     public static void main(String[] args) {
         if (args.length == 0) {
@@ -31,9 +27,10 @@ public class App {
                     ProjectGenerator.generateSite(args[2]);
                     break;
                 case "page":
-                    // TODO
+                    // TODO Generate markdown page tameplate
                     break;
                 case "post":
+                    // TODO Generate markdown post tameplate
                 default:
                     System.err.println("Command not recognized");
                     break;
