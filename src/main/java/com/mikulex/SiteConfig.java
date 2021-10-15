@@ -2,13 +2,13 @@ package com.mikulex;
 
 import java.nio.file.Paths;
 import java.util.Map;
+
+import org.yaml.snakeyaml.Yaml;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.io.IOException;
 import java.io.InputStream;
-
-import org.snakeyaml.engine.v2.api.Load;
-import org.snakeyaml.engine.v2.api.LoadSettings;
 
 public class SiteConfig {
     private String baseUrl;
@@ -20,8 +20,8 @@ public class SiteConfig {
         Path file = Paths.get(dir.toString(), "config.yml");
         InputStream stream = Files.newInputStream(file);
 
-        Load load = new Load(LoadSettings.builder().build());
-        this.config = (Map<String, Object>) load.loadFromInputStream(stream);
+        Yaml yaml = new Yaml();
+        this.config = (Map<String, Object>) yaml.load(stream);
         this.baseUrl = (String) config.get("baseUrl");
         this.title = (String) config.get("title");
         stream.close();

@@ -9,8 +9,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
-import org.snakeyaml.engine.v2.api.Load;
-import org.snakeyaml.engine.v2.api.LoadSettings;
+import org.yaml.snakeyaml.Yaml;
 
 public class Post {
     private String title;
@@ -51,8 +50,8 @@ public class Post {
         line = reader.readLine();
 
         // parse frontmatter
-        Load load = new Load(LoadSettings.builder().build());
-        mapping = (Map<String, Object>) load.loadFromString(frontMatter);
+        Yaml yaml = new Yaml();
+        mapping = (Map<String, Object>) yaml.load(frontMatter);
 
         // read rest of the file
         while (!Objects.isNull(line)) {
