@@ -30,9 +30,9 @@
       <version>0.62.2</version>
     </dependency>
     <dependency>
-      <groupId>org.snakeyaml</groupId>
-      <artifactId>snakeyaml-engine</artifactId>
-      <version>2.3</version>
+      <groupId>org.yaml</groupId>
+      <artifactId>snakeyaml</artifactId>
+      <version>1.29</version>
     </dependency>
     <dependency>
       <groupId>org.freemarker</groupId>
