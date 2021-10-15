@@ -30,14 +30,14 @@
       <version>0.62.2</version>
     </dependency>
     <dependency>
-      <groupId>com.amihaiemil.web</groupId>
-      <artifactId>eo-yaml</artifactId>
-      <version>5.2.3</version>
+      <groupId>org.snakeyaml</groupId>
+      <artifactId>snakeyaml-engine</artifactId>
+      <version>2.3</version>
     </dependency>
     <dependency>
-      <groupId>org.thymeleaf</groupId>
-      <artifactId>thymeleaf</artifactId>
-      <version>3.0.12.RELEASE</version>
+      <groupId>org.freemarker</groupId>
+      <artifactId>freemarker</artifactId>
+      <version>2.3.31</version>
     </dependency>
   </dependencies>
 
