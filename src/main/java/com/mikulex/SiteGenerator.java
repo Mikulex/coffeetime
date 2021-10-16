@@ -89,12 +89,10 @@ public class SiteGenerator {
         try {
             Node document = mdParser.parse(post.getMarkdownRawContent());
             String html = renderer.render(document);
-            Map root = new HashMap<>();
             post.setContent(html);
-            root.put("post", post);
 
-            // TODO: templating of html files
-            // TODO: put post input into layout
+            Map<String, Object> root = new HashMap<>();
+            root.put("post", post);
 
             Path relativeFile = target.toAbsolutePath().relativize(post.getFile());
 
@@ -116,8 +114,6 @@ public class SiteGenerator {
             /* Merge data-model with template */
             Writer out = new FileWriter(newFile.toFile());
             template.process(root, out);
-            // Files.createFile(newFile);
-            // Files.writeString(newFile, html, StandardOpenOption.WRITE);
             out.close();
         } catch (Exception e) {
             System.err.println("Failed while creating post for " + post.getFile().getFileName().toAbsolutePath());
