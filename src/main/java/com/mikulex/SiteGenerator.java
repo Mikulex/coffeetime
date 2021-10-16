@@ -14,18 +14,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.vladsch.flexmark.html.HtmlRenderer;
-import com.vladsch.flexmark.parser.Parser;
-import com.vladsch.flexmark.util.ast.Node;
-
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 
 public class SiteGenerator {
     private SiteConfig config;
+    private MarkdownParser markdownParser;
     private Path root;
-    private Parser mdParser;
-    private HtmlRenderer renderer;
     private Path postsFolder;
     private Path pagesFolder;
     private Path siteFolder;
@@ -37,10 +32,9 @@ public class SiteGenerator {
         postsFolder = root.resolve("_posts");
         pagesFolder = root.resolve("_pages");
         siteFolder = root.resolve("_site");
-        mdParser = Parser.builder().build();
-        renderer = HtmlRenderer.builder().build();
         templateConfig = new Configuration(Configuration.VERSION_2_3_29);
         templateConfig.setDirectoryForTemplateLoading(root.resolve("_layouts").toFile());
+        markdownParser = new MarkdownParser();
     }
 
     private void cleanSiteFolder() {
@@ -86,11 +80,10 @@ public class SiteGenerator {
 
     private void createFile(Post post, Path target) {
         try {
-            Node document = mdParser.parse(post.getMarkdownRawContent());
-            String html = renderer.render(document);
-            post.setContent(html);
-
             Map<String, Object> root = new HashMap<>();
+
+            markdownParser.parse(post);
+
             root.put("post", post);
 
             Path relativeFile = target.toAbsolutePath().relativize(post.getFile());
