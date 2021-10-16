@@ -19,9 +19,9 @@ public class SiteConfig {
         Path dir = Paths.get(System.getProperty("user.dir"));
         Path file = Paths.get(dir.toString(), "config.yml");
         InputStream stream = Files.newInputStream(file);
+        YamlParser parser = new YamlParser();
 
-        Yaml yaml = new Yaml();
-        this.config = (Map<String, Object>) yaml.load(stream);
+        this.config = parser.parseFile(stream);
         this.baseUrl = (String) config.get("baseUrl");
         this.title = (String) config.get("title");
         stream.close();

@@ -31,33 +31,17 @@ public class Post {
     public Post(Path p) throws IOException, Exception {
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'"); // Quoted "Z" to indicate UTC, no timezone offset
         BufferedReader reader = Files.newBufferedReader(p);
-        Yaml yaml = new Yaml();
-
-        String frontMatter = "";
-        String line = reader.readLine();
+        YamlParser yamlParser = new YamlParser();
 
         markdownRawContent = "";
 
         this.file = p;
         System.out.println("Creating post for " + this.file.getFileName());
 
-        // detect frontmatter
-        if (!line.equals("---")) {
-            throw new Exception("No Frontmatter detected!");
-        }
+        this.mapping = yamlParser.parseFrontMatter(reader);
 
-        // read frontmatter until another "---" is detected
-        frontMatter = frontMatter.concat(line + "\n");
-        line = reader.readLine();
-        while (!line.equals("---")) {
-            frontMatter = frontMatter.concat(line + "\n");
-            line = reader.readLine();
-        }
-        // skip last frontmatter line
-        line = reader.readLine();
-
-        // parse frontmatter
-        this.mapping = (Map<String, Object>) yaml.load(frontMatter);
+        // skip last "---" from the frontmatter
+        String line = reader.readLine();
 
         // read rest of the file
         while (!Objects.isNull(line)) {
@@ -142,4 +126,5 @@ public class Post {
         }
         return title;
     }
+
 }
