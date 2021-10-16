@@ -7,7 +7,6 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -121,6 +120,13 @@ public class SiteGenerator {
         }
     }
 
+    /**
+     * Find all markdown files in the _posts directory and its subdirectories,
+     * create Post objects for them and return a List<Post>, sorted by date found in
+     * the frontmatter.
+     * 
+     * @return a List containing Posts sorted by Date
+     */
     private List<Post> collectPosts() {
         List<Path> postFiles = new ArrayList<>();
         List<Post> posts = new ArrayList<>();
@@ -151,6 +157,7 @@ public class SiteGenerator {
         }
         System.out.println("Post count: " + posts.size());
 
+        posts.sort(Comparator.comparing(Post::getDate));
         return posts;
     }
 
