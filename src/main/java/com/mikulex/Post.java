@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 
@@ -17,6 +20,7 @@ public class Post {
     private Path layout;
     private String content;
     private Map<String, Object> mapping;
+    private Date date;
 
     /**
      * Generate a new Post based on a markdown file. Title will be generated based
@@ -25,20 +29,24 @@ public class Post {
      * @param p path to the markdown file
      */
     public Post(Path p) throws IOException, Exception {
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'"); // Quoted "Z" to indicate UTC, no timezone offset
+        BufferedReader reader = Files.newBufferedReader(p);
+        Yaml yaml = new Yaml();
+
+        String frontMatter = "";
+        String line = reader.readLine();
+
+        markdownRawContent = "";
+
         this.file = p;
         System.out.println("Creating post for " + this.file.getFileName());
 
-        // split frontmatter from the actual markdown content
-        BufferedReader reader = Files.newBufferedReader(p);
-        String frontMatter = "";
-        markdownRawContent = "";
-
         // detect frontmatter
-        String line = reader.readLine();
         if (!line.equals("---")) {
             throw new Exception("No Frontmatter detected!");
         }
 
+        // read frontmatter until another "---" is detected
         frontMatter = frontMatter.concat(line + "\n");
         line = reader.readLine();
         while (!line.equals("---")) {
@@ -49,25 +57,25 @@ public class Post {
         line = reader.readLine();
 
         // parse frontmatter
-        Yaml yaml = new Yaml();
-        mapping = (Map<String, Object>) yaml.load(frontMatter);
+        this.mapping = (Map<String, Object>) yaml.load(frontMatter);
 
         // read rest of the file
         while (!Objects.isNull(line)) {
-            markdownRawContent = markdownRawContent.concat(line + "\n");
+            this.markdownRawContent = markdownRawContent.concat(line + "\n");
             line = reader.readLine();
         }
         reader.close();
 
         this.title = generateTitle();
+        this.date = df.parse((String) mapping.get("date"));
 
         // get layout based on frontmatter
-        layout = Paths.get(System.getProperty("user.dir"), "_layouts");
+        this.layout = Paths.get(System.getProperty("user.dir"), "_layouts");
 
-        if (!Objects.isNull(mapping) && !Objects.isNull(mapping.get("layout"))) {
-            layout = layout.resolve((String) mapping.get("layout") + ".html");
+        if (!Objects.isNull(mapping) && mapping.containsKey("layout")) {
+            this.layout = layout.resolve((String) mapping.get("layout") + ".html");
         } else {
-            layout = layout.resolve("post.html");
+            this.layout = layout.resolve("post.html");
         }
 
     }
@@ -98,6 +106,10 @@ public class Post {
 
     public Path getFile() {
         return file;
+    }
+
+    public Date getDate() {
+        return date;
     }
 
     /**
