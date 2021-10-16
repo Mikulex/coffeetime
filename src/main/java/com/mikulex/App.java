@@ -13,7 +13,7 @@ public class App {
                     App.build();
                     break;
                 default:
-                    System.err.println("Command not recognized");
+                    System.err.println("Command not recognized: " + args[0]);
             }
         }
     }
@@ -30,9 +30,10 @@ public class App {
                     // TODO Generate markdown page tameplate
                     break;
                 case "post":
-                    // TODO Generate markdown post tameplate
+                    ProjectGenerator.generatePost(args[2]);
+                    break;
                 default:
-                    System.err.println("Command not recognized");
+                    System.err.println("Command not recognized: " + args[2]);
                     break;
             }
         }
