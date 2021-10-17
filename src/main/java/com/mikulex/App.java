@@ -27,10 +27,10 @@ public class App {
                     ProjectGenerator.generateSite(args[2]);
                     break;
                 case "page":
-                    // TODO Generate markdown page tameplate
+                    ProjectGenerator.generateFile(args[2], "_pages");
                     break;
                 case "post":
-                    ProjectGenerator.generatePost(args[2]);
+                    ProjectGenerator.generateFile(args[2], "_posts");
                     break;
                 default:
                     System.err.println("Command not recognized: " + args[2]);

@@ -40,11 +40,11 @@ public class ProjectGenerator {
         }
     }
 
-    public static void generatePost(String title) {
-        Path posts = Paths.get(System.getProperty("user.dir"), "_posts");
+    public static void generateFile(String title, String directory) {
+        Path directoryPath = Paths.get(System.getProperty("user.dir"), directory);
         String fileName = title.concat(".md");
         String[] parts = title.split("-");
-        Path file = posts.resolve(fileName);
+        Path file = directoryPath.resolve(fileName);
 
         for (int i = 0; i < parts.length; i++) {
             parts[i] = parts[i].substring(0, 1).toUpperCase() + parts[i].substring(1);
@@ -52,7 +52,7 @@ public class ProjectGenerator {
 
         String newTitle = String.join(" ", parts);
 
-        if (Files.exists(posts)) {
+        if (Files.exists(directoryPath)) {
             try {
                 // get ISO-8601 time format
                 DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'"); // Quoted "Z" to indicate UTC, no
@@ -65,13 +65,13 @@ public class ProjectGenerator {
                 writer.write("---");
                 writer.flush();
                 writer.close();
-                System.out.println("Post " + file.getFileName() + " generated");
+                System.out.println("File " + file.getFileName() + " generated");
             } catch (Exception e) {
                 System.err.println("Failed to create " + file.toAbsolutePath());
                 System.err.println(e);
             }
         } else {
-            System.err.println("_posts folder not found!");
+            System.err.println("Directory " + directory + " not found!");
             System.exit(1);
         }
     }
