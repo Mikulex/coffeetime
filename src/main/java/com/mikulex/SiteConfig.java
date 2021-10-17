@@ -3,8 +3,6 @@ package com.mikulex;
 import java.nio.file.Paths;
 import java.util.Map;
 
-import org.yaml.snakeyaml.Yaml;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.io.IOException;
