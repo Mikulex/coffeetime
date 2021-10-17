@@ -142,4 +142,8 @@ public class Post {
         return relativeLink;
     }
 
+    public ContentType getType() {
+        return type;
+    }
+
 }
