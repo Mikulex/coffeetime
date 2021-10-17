@@ -11,8 +11,6 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 
-import org.yaml.snakeyaml.Yaml;
-
 public class Post {
     private String title;
     private String markdownRawContent;
@@ -21,6 +19,9 @@ public class Post {
     private String content;
     private Map<String, Object> mapping;
     private Date date;
+    private String relativeLink;
+    private ContentType type;
+    private SiteConfig siteConfig;
 
     /**
      * Generate a new Post based on a markdown file. Title will be generated based
@@ -28,18 +29,19 @@ public class Post {
      * 
      * @param p path to the markdown file
      */
-    public Post(Path p) throws IOException, Exception {
+    public Post(Path p, ContentType type, SiteConfig siteConfig) throws IOException, Exception {
+        System.out.println("Creating post for " + p.getFileName());
+
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'"); // Quoted "Z" to indicate UTC, no timezone offset
         BufferedReader reader = Files.newBufferedReader(p);
         YamlParser yamlParser = new YamlParser();
 
         markdownRawContent = "";
-
+        this.siteConfig = siteConfig;
         this.file = p;
-        System.out.println("Creating post for " + this.file.getFileName());
-
+        this.type = type;
         this.mapping = yamlParser.parseFrontMatter(reader);
-
+        this.relativeLink = this.generateRelativeLink();
         // skip last "---" from the frontmatter
         String line = reader.readLine();
 
@@ -61,7 +63,16 @@ public class Post {
         } else {
             this.layout = layout.resolve("post.html");
         }
+    }
 
+    private String generateRelativeLink() {
+        switch (type) {
+            case PAGE:
+                return siteConfig.getSitePageFolderString() + file.getFileName();
+            case POST:
+                return siteConfig.getSitePostFolderString() + file.getFileName();
+        }
+        return "";
     }
 
     public String getContent() {
@@ -125,6 +136,10 @@ public class Post {
             title = (String) mapping.get("title");
         }
         return title;
+    }
+
+    public String getRelativeLink() {
+        return relativeLink;
     }
 
 }
