@@ -97,7 +97,7 @@ public class Post {
         return markdownRawContent;
     }
 
-    public Map<String, Object> getMapping() {
+    public Map<String, Object> getVars() {
         return mapping;
     }
 
