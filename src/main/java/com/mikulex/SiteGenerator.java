@@ -25,6 +25,7 @@ public class SiteGenerator {
     private Path pagesFolder;
     private Path siteFolder;
     private Configuration templateConfig;
+    private List<Post> postList;
 
     public SiteGenerator() throws IOException {
         config = new SiteConfig();
@@ -62,9 +63,9 @@ public class SiteGenerator {
     }
 
     private void generatePosts() {
-        List<Post> posts = collectPosts();
+        this.postList = collectPosts();
         System.out.println("Converting posts");
-        for (Post post : posts) {
+        for (Post post : this.postList) {
             createFile(post, postsFolder);
         }
 
@@ -84,8 +85,6 @@ public class SiteGenerator {
 
             markdownParser.parse(post);
 
-            root.put("post", post);
-
             Path relativeFile = target.toAbsolutePath().relativize(post.getFile());
 
             // Swap .md for .html
@@ -94,11 +93,20 @@ public class SiteGenerator {
             String fileName = "";
             for (String part : fileNameSplit) {
                 fileName = fileName.concat(part);
-
             }
-            Path newFile = siteFolder.resolve(fileName);
+
+            Path newFile = Paths.get("");
+            if (target.endsWith("_posts")) {
+                newFile = siteFolder.resolve(config.getSitePostFolderPath().resolve(fileName));
+            } else {
+                newFile = siteFolder.resolve(config.getSitePageFolderPath().resolve(fileName));
+            }
 
             Files.createDirectories(newFile.getParent());
+
+            // prepare map for template engine
+            root.put("post", post);
+            root.put("posts", this.postList);
 
             /* Get the template (uses cache internally) */
             Template template = templateConfig.getTemplate(post.getLayout().getFileName().toString());
@@ -142,7 +150,7 @@ public class SiteGenerator {
 
         for (Path p : postFiles) {
             try {
-                posts.add(new Post(p));
+                posts.add(new Post(p, ContentType.POST, config));
             } catch (Exception e) {
                 System.err.println("Failed to create post for " + p.toAbsolutePath() + " ! Skipping file");
                 System.err.println(e);
@@ -167,7 +175,7 @@ public class SiteGenerator {
 
         for (Path p : pageFiles) {
             try {
-                pages.add(new Post(p));
+                pages.add(new Post(p, ContentType.PAGE, config));
 
             } catch (Exception e) {
                 System.err.println("Failed create page for " + p.toAbsolutePath());
