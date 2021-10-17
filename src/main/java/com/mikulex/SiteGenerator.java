@@ -69,9 +69,10 @@ public class SiteGenerator {
         Path index = siteFolder.resolve("index.html");
 
         if (Files.notExists(index)) {
+            System.out.println("Generating index.html");
             Map<String, Object> root = new HashMap<>();
             root.put("posts", postList);
-
+            root.put("site", config.getConfig());
             try {
                 Template template = templateConfig.getTemplate("index.html");
                 Writer out = new FileWriter(index.toFile());
@@ -81,7 +82,8 @@ public class SiteGenerator {
                 System.err.println("Failed while generating index");
                 System.err.println(e);
             }
-
+        } else {
+            System.out.println("index.html found");
         }
 
     }
@@ -101,8 +103,6 @@ public class SiteGenerator {
         for (Post page : pages) {
             createFile(page, pagesFolder);
         }
-        // only create an index file seperately if there is no page made for it
-
     }
 
     private void createFile(Post post, Path target) {
@@ -132,6 +132,7 @@ public class SiteGenerator {
             }
 
             templateRoot.put("posts", this.postList);
+            templateRoot.put("site", config.getConfig());
 
             Files.createDirectories(newFile.getParent());
 
