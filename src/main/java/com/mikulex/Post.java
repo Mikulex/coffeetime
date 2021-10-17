@@ -60,8 +60,10 @@ public class Post {
 
         if (!Objects.isNull(mapping) && mapping.containsKey("layout")) {
             this.layout = layout.resolve((String) mapping.get("layout") + ".html");
-        } else {
+        } else if (type.equals(ContentType.POST)) {
             this.layout = layout.resolve("post.html");
+        } else {
+            this.layout = layout.resolve("page.html");
         }
     }
 
