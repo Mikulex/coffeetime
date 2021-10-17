@@ -12,6 +12,8 @@ public class SiteConfig {
     private String baseUrl;
     private String title;
     private Map<String, Object> config;
+    private String sitePostFolder;
+    private String sitePageFolder;
 
     public SiteConfig() throws IOException {
         Path dir = Paths.get(System.getProperty("user.dir"));
@@ -22,6 +24,8 @@ public class SiteConfig {
         this.config = parser.parseFile(stream);
         this.baseUrl = (String) config.get("baseUrl");
         this.title = (String) config.get("title");
+        this.sitePageFolder = (String) config.get("pages");
+        this.sitePostFolder = (String) config.get("posts");
         stream.close();
     }
 
@@ -31,6 +35,32 @@ public class SiteConfig {
 
     public String getTitle() {
         return title;
+    }
+
+    public String getSitePageFolderString() {
+        return sitePageFolder;
+    }
+
+    public String getSitePostFolderString() {
+        return sitePostFolder;
+    }
+
+    public Path getSitePageFolderPath() {
+        String[] parts = sitePageFolder.split("/");
+        Path result = Paths.get("");
+        for (String part : parts) {
+            result = result.resolve(part);
+        }
+        return result;
+    }
+
+    public Path getSitePostFolderPath() {
+        String[] parts = sitePostFolder.split("/");
+        Path result = Paths.get("");
+        for (String part : parts) {
+            result = result.resolve(part);
+        }
+        return result;
     }
 
     public Map<String, Object> getConfig() {
