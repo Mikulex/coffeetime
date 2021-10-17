@@ -20,7 +20,7 @@ import freemarker.template.Template;
 public class SiteGenerator {
     private SiteConfig config;
     private MarkdownParser markdownParser;
-    private Path root;
+    private Path projectFolder;
     private Path postsFolder;
     private Path pagesFolder;
     private Path siteFolder;
@@ -29,12 +29,12 @@ public class SiteGenerator {
 
     public SiteGenerator() throws IOException {
         config = new SiteConfig();
-        root = Paths.get(System.getProperty("user.dir"));
-        postsFolder = root.resolve("_posts");
-        pagesFolder = root.resolve("_pages");
-        siteFolder = root.resolve("_site");
+        projectFolder = Paths.get(System.getProperty("user.dir"));
+        postsFolder = projectFolder.resolve("_posts");
+        pagesFolder = projectFolder.resolve("_pages");
+        siteFolder = projectFolder.resolve("_site");
         templateConfig = new Configuration(Configuration.VERSION_2_3_29);
-        templateConfig.setDirectoryForTemplateLoading(root.resolve("_layouts").toFile());
+        templateConfig.setDirectoryForTemplateLoading(projectFolder.resolve("_layouts").toFile());
         markdownParser = new MarkdownParser();
     }
 
@@ -62,6 +62,30 @@ public class SiteGenerator {
         }
     }
 
+    /**
+     * Generates an index file in the website root if no page was generated for it.
+     */
+    private void generateIndex() {
+        Path index = siteFolder.resolve("index.html");
+
+        if (Files.notExists(index)) {
+            Map<String, Object> root = new HashMap<>();
+            root.put("posts", postList);
+
+            try {
+                Template template = templateConfig.getTemplate("index.html");
+                Writer out = new FileWriter(index.toFile());
+                template.process(root, out);
+                out.close();
+            } catch (Exception e) {
+                System.err.println("Failed while generating index");
+                System.err.println(e);
+            }
+
+        }
+
+    }
+
     private void generatePosts() {
         this.postList = collectPosts();
         System.out.println("Converting posts");
@@ -77,11 +101,13 @@ public class SiteGenerator {
         for (Post page : pages) {
             createFile(page, pagesFolder);
         }
+        // only create an index file seperately if there is no page made for it
+
     }
 
     private void createFile(Post post, Path target) {
         try {
-            Map<String, Object> root = new HashMap<>();
+            Map<String, Object> templateRoot = new HashMap<>();
 
             markdownParser.parse(post);
 
@@ -90,30 +116,31 @@ public class SiteGenerator {
             // Swap .md for .html
             String[] fileNameSplit = relativeFile.toString().split("\\.");
             fileNameSplit[fileNameSplit.length - 1] = ".html";
-            String fileName = "";
+            String relativeHtmlFileName = "";
             for (String part : fileNameSplit) {
-                fileName = fileName.concat(part);
+                relativeHtmlFileName = relativeHtmlFileName.concat(part);
             }
 
+            // set file path according to content type
             Path newFile = Paths.get("");
-            if (target.endsWith("_posts")) {
-                newFile = siteFolder.resolve(config.getSitePostFolderPath().resolve(fileName));
+            if (post.getType().equals(ContentType.POST)) {
+                newFile = siteFolder.resolve(config.getSitePostFolderPath().resolve(relativeHtmlFileName));
+                templateRoot.put("post", post);
             } else {
-                newFile = siteFolder.resolve(config.getSitePageFolderPath().resolve(fileName));
+                newFile = siteFolder.resolve(config.getSitePageFolderPath().resolve(relativeHtmlFileName));
+                templateRoot.put("page", post);
             }
+
+            templateRoot.put("posts", this.postList);
 
             Files.createDirectories(newFile.getParent());
-
-            // prepare map for template engine
-            root.put("post", post);
-            root.put("posts", this.postList);
 
             /* Get the template (uses cache internally) */
             Template template = templateConfig.getTemplate(post.getLayout().getFileName().toString());
 
             /* Merge data-model with template */
             Writer out = new FileWriter(newFile.toFile());
-            template.process(root, out);
+            template.process(templateRoot, out);
             out.close();
         } catch (Exception e) {
             System.err.println("Failed while creating post for " + post.getFile().getFileName().toAbsolutePath());
@@ -162,11 +189,17 @@ public class SiteGenerator {
         return posts;
     }
 
+    /**
+     * Look for Pages
+     * 
+     * @return
+     */
     private List<Post> collectPages() {
         List<Path> pageFiles = new ArrayList<>();
         List<Post> pages = new ArrayList<>();
+
         try {
-            pageFiles = Files.list(siteFolder).filter(Files::isRegularFile)
+            pageFiles = Files.list(pagesFolder).filter(Files::isRegularFile)
                     .filter(file -> file.toString().toLowerCase().endsWith(".md"))
                     .collect(Collectors.toCollection(ArrayList::new));
         } catch (Exception e) {
@@ -190,5 +223,6 @@ public class SiteGenerator {
         cleanSiteFolder();
         generatePosts();
         generatePages();
+        generateIndex();
     }
 }
