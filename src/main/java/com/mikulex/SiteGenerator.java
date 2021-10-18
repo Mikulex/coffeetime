@@ -45,26 +45,32 @@ public class SiteGenerator {
 
     private void cleanSiteFolder() {
         System.out.println("Clean site folder");
-        if (Files.exists(siteFolder) && Files.isDirectory(siteFolder)) {
-            try {
-                Files.walk(siteFolder).sorted(Comparator.reverseOrder()).map(path -> path.toFile())
-                        .forEach(path -> path.delete());
-            } catch (Exception e) {
-                System.err.println("Error while traversing " + siteFolder.toAbsolutePath());
-                System.err.println("Aborting!");
-                System.err.println(e);
-                System.exit(1);
-            }
+        try {
+            Files.walkFileTree(siteFolder, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    Files.delete(file);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException e) throws IOException {
+                    if (e == null) {
+                        if (!Files.isSameFile(dir, siteFolder)) {
+                            Files.delete(dir);
+                        }
+                        return FileVisitResult.CONTINUE;
+                    } else {
+                        // directory iteration failed
+                        throw e;
+                    }
+                }
+            });
+        } catch (Exception e) {
+            System.err.println("Failed while trying to clean _site directory");
+            System.err.println(e);
         }
 
-        try {
-            Files.createDirectory(siteFolder);
-        } catch (Exception e) {
-            System.err.println("Failed to create " + siteFolder.toAbsolutePath());
-            System.err.println("Aborting!");
-            System.err.println(e);
-            System.exit(1);
-        }
     }
 
     /**
