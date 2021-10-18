@@ -68,11 +68,17 @@ public class Post {
     }
 
     private String generateRelativeLink() {
+        String[] fileNameSplit = file.getFileName().toString().split("\\.");
+        fileNameSplit[fileNameSplit.length - 1] = ".html";
+        String htmlFileName = "";
+        for (String part : fileNameSplit) {
+            htmlFileName = htmlFileName.concat(part);
+        }
         switch (type) {
             case PAGE:
-                return siteConfig.getSitePageFolderString() + file.getFileName();
+                return siteConfig.getSitePageFolderString() + htmlFileName;
             case POST:
-                return siteConfig.getSitePostFolderString() + file.getFileName();
+                return siteConfig.getSitePostFolderString() + htmlFileName;
         }
         return "";
     }
