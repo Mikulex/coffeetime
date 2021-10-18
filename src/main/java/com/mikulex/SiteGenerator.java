@@ -4,9 +4,12 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -24,6 +27,7 @@ public class SiteGenerator {
     private Path postsFolder;
     private Path pagesFolder;
     private Path siteFolder;
+    private Path assetsFolder;
     private Configuration templateConfig;
     private List<Post> postList;
 
@@ -33,6 +37,7 @@ public class SiteGenerator {
         postsFolder = projectFolder.resolve("_posts");
         pagesFolder = projectFolder.resolve("_pages");
         siteFolder = projectFolder.resolve("_site");
+        assetsFolder = projectFolder.resolve("assets");
         templateConfig = new Configuration(Configuration.VERSION_2_3_29);
         templateConfig.setDirectoryForTemplateLoading(projectFolder.resolve("_layouts").toFile());
         markdownParser = new MarkdownParser();
@@ -220,10 +225,36 @@ public class SiteGenerator {
 
     }
 
+    private void copyAssets() {
+        Path siteAssets = siteFolder.resolve("assets");
+        try {
+            Files.walkFileTree(assetsFolder, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                    Path targetdir = siteAssets.resolve(assetsFolder.relativize(dir));
+                    Files.copy(dir, targetdir);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    Files.copy(file, siteAssets.resolve(assetsFolder.relativize(file)));
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (Exception e) {
+            System.err.println("Failed while trying to copying assets");
+            System.err.println(e);
+        }
+
+    }
+
     public void build() {
         cleanSiteFolder();
         generatePosts();
         generatePages();
         generateIndex();
+        copyAssets();
     }
+
 }
