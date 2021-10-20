@@ -1,5 +1,5 @@
 ---
-  baseUrl: https://example.com
+  baseUrl: https://example.com/
   title: My Cool Website!
-  posts: "posts/"
-  pages: ""
+  posts: "/posts/"
+  pages: "/"

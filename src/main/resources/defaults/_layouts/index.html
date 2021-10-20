@@ -1,21 +1,33 @@
 <#ftl output_format="HTML">
+<#import "/_partials.html" as part>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/style.css">
     <title>${site.title}</title>
-
 </head>
 <body>
-    <ul>
-        <#list posts as p>
-        <li>${p.date} : ${p.title}
-        </#list>
-    </ul>
-    
-    
-    
+    <@part.header/>
+    <div class="main-container">
+        <div class="index-container"> 
+            <h1 class="post-title">Welcome to my site!</h1>
+            <hr>
+            <p>${site.title}</p>
+            <h2>Here are my blog posts</h2>
+            <div class="posts-container">    
+                <#list posts?reverse as p>
+                <a class="link-item" href="${p.relativeLink}">${p.title}</a>
+                <span class="date-item">${p.date?string["yyyy-MM-dd"]}</span>
+                </#list>
+            </div>
+        </div>
+    </div>
+    <@part.footer/>
 </body>
 </html>

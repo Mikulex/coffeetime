@@ -1,3 +1,8 @@
+---
+date: 2021-10-20T13:51Z
+title: Example Post
+---
+
 # Thanks for using CoffeeTime!
 
 Thank you for trying out **CoffeeTime**. This blog posts will pose first as an example post to refer to, and second as a simple introduction on how to go on from here.
