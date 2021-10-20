@@ -2,17 +2,27 @@ package com.mikulex;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 
 public class ProjectGenerator {
 
-    public static void generateSite(String name) {
+    public void generateSite(String name) {
         Path currentDir = Paths.get(System.getProperty("user.dir"));
         Path projectPath = currentDir.resolve(name);
         try {
@@ -27,13 +37,8 @@ public class ProjectGenerator {
             }
 
             // Create underlying directories
-            Files.createDirectory(projectPath.resolve("_posts"));
-            Files.createDirectory(projectPath.resolve("_site"));
-            Files.createDirectory(projectPath.resolve("_layouts"));
-            Files.createDirectory(projectPath.resolve("assets"));
+            copyResources(projectPath);
 
-            // Create Files
-            Files.createFile(projectPath.resolve("config.yaml"));
         } catch (Exception e) {
             System.err.println("Failed while creating the base directory");
             System.err.println(e);
@@ -41,7 +46,34 @@ public class ProjectGenerator {
         }
     }
 
-    public static void generateFile(String title, String directory) {
+    private void copyResources(Path target) throws URISyntaxException, IOException {
+        URI resource = getClass().getResource("").toURI();
+        FileSystem fileSystem = FileSystems.newFileSystem(resource, new HashMap<String, String>());
+
+        final Path jarPath = fileSystem.getPath("/defaults");
+
+        Files.walkFileTree(jarPath, new SimpleFileVisitor<Path>() {
+
+            private Path currentTarget;
+
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                currentTarget = target.resolve(jarPath.relativize(dir).toString());
+                Files.createDirectories(currentTarget);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Files.copy(file, target.resolve(jarPath.relativize(file).toString()),
+                        StandardCopyOption.REPLACE_EXISTING);
+                return FileVisitResult.CONTINUE;
+            }
+
+        });
+    }
+
+    public void generateFile(String title, String directory) {
         Path directoryPath = Paths.get(System.getProperty("user.dir"), directory);
         String fileName = title.concat(".md");
         String[] parts = title.split("-");
