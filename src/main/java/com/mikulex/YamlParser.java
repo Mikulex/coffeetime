@@ -20,7 +20,7 @@ public class YamlParser {
 
     /**
      * Reads frontmatter, seperated on start at end with "---", and returns the yaml
-     * formatted into a HashMap. The reader stops right at the last "---"
+     * formatted into a HashMap. The reader stops right after the last "---"
      * 
      * @param reader the file reader for the markdown post
      * @return a hashmap containg yaml mappings from the frontmatter

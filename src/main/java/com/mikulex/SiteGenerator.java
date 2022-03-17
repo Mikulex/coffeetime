@@ -1,20 +1,15 @@
 package com.mikulex;
 
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
+import java.io.*;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import freemarker.template.Configuration;
@@ -30,6 +25,8 @@ public class SiteGenerator {
     private Path assetsFolder;
     private Configuration templateConfig;
     private List<Post> postList;
+    private PostGenerator postGenerator;
+    private HtmlFileGenerator htmlFileGenerator;
 
     public SiteGenerator() throws IOException {
         config = new SiteConfig();
@@ -41,6 +38,16 @@ public class SiteGenerator {
         templateConfig = new Configuration(Configuration.VERSION_2_3_29);
         templateConfig.setDirectoryForTemplateLoading(projectFolder.resolve("_layouts").toFile());
         markdownParser = new MarkdownParser();
+        postGenerator = new PostGenerator();
+        htmlFileGenerator = new HtmlFileGenerator(markdownParser, siteFolder, config, templateConfig);
+    }
+
+    public void build() {
+        cleanSiteFolder();
+        generatePosts();
+        generatePages();
+        generateIndex();
+        copyAssets();
     }
 
     private void cleanSiteFolder() {
@@ -103,7 +110,7 @@ public class SiteGenerator {
         this.postList = collectPosts();
         System.out.println("Converting posts");
         for (Post post : this.postList) {
-            createFile(post, postsFolder);
+            htmlFileGenerator.createFile(post, postsFolder, this.postList);
         }
 
     }
@@ -112,53 +119,10 @@ public class SiteGenerator {
         List<Post> pages = collectPages();
         System.out.println("Converting pages");
         for (Post page : pages) {
-            createFile(page, pagesFolder);
+            htmlFileGenerator.createFile(page, pagesFolder, this.postList);
         }
     }
-
-    private void createFile(Post post, Path target) {
-        try {
-            Map<String, Object> templateRoot = new HashMap<>();
-
-            markdownParser.parse(post);
-
-            Path relativeFile = target.toAbsolutePath().relativize(post.getFile());
-
-            // Swap .md for .html
-            String[] fileNameSplit = relativeFile.toString().split("\\.");
-            fileNameSplit[fileNameSplit.length - 1] = ".html";
-            String relativeHtmlFileName = "";
-            for (String part : fileNameSplit) {
-                relativeHtmlFileName = relativeHtmlFileName.concat(part);
-            }
-
-            // set file path according to content type
-            Path newFile = Paths.get("");
-            if (post.getType().equals(ContentType.POST)) {
-                newFile = siteFolder.resolve(config.getSitePostFolderPath().resolve(relativeHtmlFileName));
-                templateRoot.put("post", post);
-            } else {
-                newFile = siteFolder.resolve(config.getSitePageFolderPath().resolve(relativeHtmlFileName));
-                templateRoot.put("page", post);
-            }
-
-            templateRoot.put("posts", this.postList);
-            templateRoot.put("site", config.getConfig());
-
-            Files.createDirectories(newFile.getParent());
-
-            /* Get the template (uses cache internally) */
-            Template template = templateConfig.getTemplate(post.getLayout().getFileName().toString());
-
-            /* Merge data-model with template */
-            Writer out = new FileWriter(newFile.toFile());
-            template.process(templateRoot, out);
-            out.close();
-        } catch (Exception e) {
-            System.err.println("Failed while creating post for " + post.getFile().getFileName().toAbsolutePath());
-            System.err.println(e);
-        }
-    }
+    
 
     /**
      * Find all markdown files in the _posts directory and its subdirectories,
@@ -177,7 +141,8 @@ public class SiteGenerator {
                 throw new FileNotFoundException("Missing directory: " + postsFolder.toAbsolutePath());
             }
 
-            postFiles = Files.walk(postsFolder).filter(Files::isRegularFile)
+            postFiles = Files.walk(postsFolder)
+                    .filter(Files::isRegularFile)
                     .filter(file -> file.toString().toLowerCase().endsWith(".md"))
                     .collect(Collectors.toCollection(ArrayList::new));
 
@@ -189,7 +154,8 @@ public class SiteGenerator {
 
         for (Path p : postFiles) {
             try {
-                posts.add(new Post(p, ContentType.POST, config));
+                Post post = postGenerator.generatePostData(p, ContentType.POST, config);
+                posts.add(post);
             } catch (Exception e) {
                 System.err.println("Failed to create post for " + p.toAbsolutePath() + " ! Skipping file");
                 System.err.println(e);
@@ -220,7 +186,8 @@ public class SiteGenerator {
 
         for (Path p : pageFiles) {
             try {
-                pages.add(new Post(p, ContentType.PAGE, config));
+                Post page = postGenerator.generatePostData(p, ContentType.PAGE, config);
+                pages.add(page);
 
             } catch (Exception e) {
                 System.err.println("Failed create page for " + p.toAbsolutePath());
@@ -254,13 +221,5 @@ public class SiteGenerator {
         }
 
     }
-
-    public void build() {
-        cleanSiteFolder();
-        generatePosts();
-        generatePages();
-        generateIndex();
-        copyAssets();
-    }
-
+    
 }
