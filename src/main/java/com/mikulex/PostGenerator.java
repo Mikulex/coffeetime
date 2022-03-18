@@ -8,9 +8,8 @@ import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat; // TODO: refactor to java.time package
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class PostGenerator {
     public Post generatePostData(Path p, ContentType type, SiteConfig config) {
@@ -98,7 +97,7 @@ public class PostGenerator {
      *         the filename.
      */
     private String generateTitle(Map<String, Object> mapping, Path file) {
-        String title = "";
+        String title;
         if (Objects.isNull(mapping) || Objects.isNull(mapping.get("title"))) {
             String[] fileNameParts = file.getFileName().toString().split("\\.");
             String fileName = "";
@@ -107,13 +106,14 @@ public class PostGenerator {
             for (int i = 0; i < fileNameParts.length - 1; i++)
                 fileName = fileName.concat(fileNameParts[i]);
 
-            String[] titleParts = fileName.split("-");
+            List<String> titleParts = List.of(fileName.split("-"));
 
             // capitalize first letters
-            for (String part : titleParts) {
-                part = part.substring(0, 1).toUpperCase() + part.substring(1);
-            }
-            title = String.join(" ", titleParts);
+            title = titleParts
+                    .stream()
+                    .map((part) -> part.substring(0, 1).toUpperCase() + part.substring(1))
+                    .collect(Collectors.joining(" "));
+
         } else {
             title = (String) mapping.get("title");
         }
