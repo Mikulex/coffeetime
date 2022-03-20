@@ -16,7 +16,7 @@ public class PostGenerator {
         System.out.println("Creating post for " + p.getFileName());
 
         YamlParser yamlParser = new YamlParser();
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'"); // Quoted "Z" to indicate UTC, no timezone offset
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'"); // Quoted "Z" to indicate UTC, no timezone offset
         Map<String, Object> mapping = new HashMap<>();
 
         Post post = new Post();
@@ -29,11 +29,7 @@ public class PostGenerator {
         mapping = post.getVars();
 
         post.setTitle(generateTitle(mapping, p));
-        try {
-            post.setDate(df.parse((String) mapping.get("date")));
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
+        post.setDate((Date) mapping.get("date"));
 
         // get layout based on frontmatter
         Path layoutPath = Paths.get(System.getProperty("user.dir"), "_layouts");

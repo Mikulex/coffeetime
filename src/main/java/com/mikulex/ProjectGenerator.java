@@ -88,7 +88,7 @@ public class ProjectGenerator {
         if (Files.exists(directoryPath)) {
             try {
                 // get ISO-8601 time format
-                DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'"); // Quoted "Z" to indicate UTC, no
+                DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'"); // Quoted "Z" to indicate UTC, no
                                                                                // timezone offset
 
                 BufferedWriter writer = new BufferedWriter(new FileWriter(file.toFile()));

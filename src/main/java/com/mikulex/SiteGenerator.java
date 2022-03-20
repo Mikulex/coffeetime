@@ -27,6 +27,7 @@ public class SiteGenerator {
     private List<Post> postList;
     private PostGenerator postGenerator;
     private HtmlFileGenerator htmlFileGenerator;
+    private RssFeedGenerator rssFeedGenerator;
 
     public SiteGenerator() throws IOException {
         config = new SiteConfig();
@@ -40,6 +41,7 @@ public class SiteGenerator {
         markdownParser = new MarkdownParser();
         postGenerator = new PostGenerator();
         htmlFileGenerator = new HtmlFileGenerator(markdownParser, siteFolder, config, templateConfig);
+        rssFeedGenerator = new RssFeedGenerator(config);
     }
 
     public void build() {
@@ -47,6 +49,7 @@ public class SiteGenerator {
         generatePosts();
         generatePages();
         generateIndex();
+        generateRssFeed();
         copyAssets();
     }
 
@@ -158,7 +161,7 @@ public class SiteGenerator {
                 posts.add(post);
             } catch (Exception e) {
                 System.err.println("Failed to create post for " + p.toAbsolutePath() + " ! Skipping file");
-                System.err.println(e);
+                System.err.println(e.getStackTrace());
             }
         }
         System.out.println("Post count: " + posts.size());
@@ -196,6 +199,10 @@ public class SiteGenerator {
         }
         return pages;
 
+    }
+
+    private void generateRssFeed(){
+        rssFeedGenerator.generate(postList);
     }
 
     private void copyAssets() {
